@@ -6,7 +6,7 @@ const String tibberApi = "https://api.tibber.com/v1-beta/gql";
 const char *query = "{viewer {homes {currentSubscription {priceInfo {current {total}}}}}}";
 
 // API token for Tibber demo
-const String tibber_accces_token = "U0T_GkWASp4mAFAl0l3gxbn9LK1aLROSN4NXqkNUqg8";
+const String tibber_accces_token = "Tibber Access TOKEN";
 
 
 const char* root_ca = \ 

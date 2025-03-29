@@ -1,7 +1,7 @@
 // wifi settings
-//const char* ssid = "citroentje_EXT"; // CHANGE IT
-const char* ssid = "citroentje"; // CHANGE IT
-const char* password = "8569856901"; // CHANGE IT
+
+const char* ssid = "SID"; // CHANGE IT
+const char* password = "PASSWORD"; // CHANGE IT
 
 // time settings
 const char* ntpServerName = "pool.ntp.org";

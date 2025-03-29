@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<script>
+    function sendRowData(button) {
+        // Get the row containing the button
+        var row = button.parentNode.parentNode;
+        var name = button.id;
+
+        var checkboxName = name.replace("button", "checkbox");
+        var loadname = name.replace("button", "load");
+        var checkboxActiveName = name.replace("button", "checkboxactief")
+
+        let checkbox = document.getElementById(checkboxName);
+        let isChecked = checkbox.checked;
+
+        var checked = "Nee";
+        if (isChecked)
+            checked = "Ja";
+
+        let checkboxActive = document.getElementById(checkboxActiveName);
+        isChecked = checkboxActive.checked;
+
+        var activeChecked = "Nee";
+        if (isChecked)
+            activeChecked = "Ja";
+
+        var loadinput = document.getElementById(loadname);
+        var loadvalue = loadinput.value;
+
+        // Extract data from the row
+        var rowData = {
+            automode: checked,
+            load: loadvalue,
+            active: activeChecked
+        };
+        // Log the variables to the console
+        console.log('name:', name);
+        console.log('automode:', rowData.automode);
+        console.log('load:', rowData.load);
+        console.log('active:', rowData.active);
+
+        // Send data to the server using Fetch API
+        var url = "./set?button=" + name + "&automode=" + rowData.automode + "&load=" + rowData.load + "&active=" + rowData.active;
+        console.log('url:', url);
+        fetch(url, {
+            method: 'get',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+
+        })
+            .then(data => {
+
+                console.log('Success:', data);
+                alert('Data opgeslagen!');
+            })
+            .catch((error) => {
+                console.error('Error', error);
+                alert('Updaten mislukt! Ververs de pagine en probeer opnieuw'); 
+            });
+    }
+
+    function updateDateTime() {
+        const now = new Date();
+        const formattedDateTime = now.toLocaleString();
+        document.getElementById('datetime').textContent = formattedDateTime;
+    }
+
+    setInterval(updateDateTime, 1000);
+    updateDateTime(); // Initial call to display immediately
+
+</script>
+<html>
+
+<head>
+    <title>Marstek Venus C controller</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" type="text/css" href="./style.css">
+</head>
+
+<body>
+    <div class="center">
+        <h1>Marstek Venus C controller 2025-03-12</h1>
+        <a href="./batterijinfo.html">batterijinfo</a>
+        <div id="datetime"></div>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Tijdstip</th>
+                    <th>Kosten</th>
+                    <th>Mode</th>
+                    <th>Load</th>
+                    <th>Actief</th>
+                    <th>Actie</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 0 uur-->
+                <tr>
+                    <td>00:00</td>
+                    <td>%kosten0%</td>
+
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox0" %autochecked0%>
+                    </td>
+                    <td><input type="number" id="load0" value="%load0%" class="load-input"/> </td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief0" %active0%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button0">Opslaan</button>
+                </tr>
+                <!-- 1 uur-->
+                <tr>
+                    <td>01:00</td>
+                    <td>%kosten1%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox1" %autochecked1%>
+                    </td>
+                    <td><input type="number" id="load1" value="%load1%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief1" %active1%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button1">Opslaan</button>
+                </tr>
+                <!-- 2 uur-->
+                <tr>
+                    <td>02:00</td>
+                    <td>%kosten2%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox2" %autochecked2%>
+                    </td>
+                    <td><input type="number" id="load2" value="%load2%" class="load-input" /></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief2" %active2%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button2">Opslaan</button>
+                </tr>
+                <!-- 3 uur-->
+                <tr>
+                    <td>03:00</td>
+                    <td>%kosten3%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox3" %autochecked3%>
+                    </td>
+                    <td><input type="number" id="load3" value="%load3%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief3" %active3%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button3">Opslaan</button>
+                </tr>
+
+                <!-- 4 uur-->
+                <tr>
+                    <td>04:00</td>
+                    <td>%kosten4%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox4" %autochecked4%>
+                    </td>
+                    <td><input type="number" id="load4" value="%load4%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief4" %active4%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button4">Opslaan</button>
+                </tr>
+                <!-- 5 uur-->
+                <tr>
+                    <td>05:00</td>
+                    <td>%kosten5%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox5" %autochecked5%>
+                    </td>
+                    <td><input type="number" id="load5" value="%load5%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief5" %active5%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button5">Opslaan</button>
+                </tr>
+                <!-- 6 uur-->
+                <tr>
+                    <td>06:00</td>
+                    <td>%kosten6%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox6" %autochecked6%>
+                    </td>
+                    <td><input type="number" id="load6" value="%load6%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief6" %active6%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button6">Opslaan</button>
+                </tr>
+                <!-- 7 uur-->
+                <tr>
+                    <td>07:00</td>
+                    <td>%kosten7%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox7" %autochecked7%>
+                    </td>
+                    <td><input type="number" id="load7" value="%load7%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief7" %active7%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button7">Opslaan</button>
+                </tr>
+                <!-- 8 uur-->
+                <tr>
+                    <td>08:00</td>
+                    <td>%kosten8%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox8" %autochecked8%>
+                    </td>
+                    <td><input type="number" id="load8" value="%load8%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief8" %active8%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button8">Opslaan</button>
+                </tr>
+                <!-- 9 uur-->
+                <tr>
+                    <td>09:00</td>
+                    <td>%kosten9%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox9" %autochecked9%>
+                    </td>
+                    <td><input type="number" id="load9" value="%load9%" class="load-input" /></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief9" %active9%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button9">Opslaan</button>
+                </tr>
+                <!-- 10 uur-->
+                <tr>
+                    <td>10:00</td>
+                    <td>%kosten10%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox10" %autochecked10%>
+                    </td>
+                    <td><input type="number" id="load10" value="%load10%" class="load-input" /></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief10" %active10%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button10">Opslaan</button>
+                </tr>
+                <!-- 11 uur-->
+                <tr>
+                    <td>11:00</td>
+                    <td>%kosten11%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox11" %autochecked11%>
+                    </td>
+                    <td><input type="number" id="load11" value="%load11%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief11" %active11%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button11">Opslaan</button>
+                </tr>
+                <!-- 12 uur-->
+                <tr>
+                    <td>12:00</td>
+                    <td>%kosten12%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox12" %autochecked12%>
+                    </td>
+                    <td><input type="number" id="load12" value="%load12%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief12" %active12%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button12">Opslaan</button>
+                </tr>
+                <!-- 13 uur-->
+                <tr>
+                    <td>13:00</td>
+                    <td>%kosten13%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox13" %autochecked13%>
+                    </td>
+                    <td><input type="number" id="load13" value="%load13%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief13" %active13%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button13">Opslaan</button>
+                </tr>
+                <!-- 14 uur-->
+                <tr>
+                    <td>14:00</td>
+                    <td>%kosten14%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox14" %autochecked14%>
+                    </td>
+                    <td><input type="number" id="load14" value="%load14%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief14" %active14%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button14">Opslaan</button>
+                </tr>
+                <!-- 15 uur-->
+                <tr>
+                    <td>15:00</td>
+                    <td>%kosten15%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox15" %autochecked15%>
+                    </td>
+                    <td><input type="number" id="load15" value="%load15%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief15" %active15%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button15">Opslaan</button>
+                </tr>
+                <!-- 16 uur-->
+                <tr>
+                    <td>16:00</td>
+                    <td>%kosten16%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox16" %autochecked16%>
+                    </td>
+                    <td><input type="number" id="load16" value="%load16%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief16" %active16%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button16">Opslaan</button>
+                </tr>
+                <!-- 17 uur-->
+                <tr>
+                    <td>17:00</td>
+                    <td>%kosten17%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox17" %autochecked17%>
+                    </td>
+                    <td><input type="number" id="load17" value="%load17%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief17" %active17%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button17">Opslaan</button>
+                </tr>
+                <!-- 18 uur-->
+                <tr>
+                    <td>18:00</td>
+                    <td>%kosten18%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox18" %autochecked18%>
+                    </td>
+                    <td><input type="number" id="load18" value="%load18%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief18" %active18%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button18">Opslaan</button>
+                </tr>
+                <!-- 19 uur-->
+                <tr>
+                    <td>19:00</td>
+                    <td>%kosten19%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox19" %autochecked19%>
+                    </td>
+                    <td><input type="number" id="load19" value="%load19%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief19" %active19%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button19">Opslaan</button>
+                </tr>
+                <!-- 20 uur-->
+                <tr>
+                    <td>20:00</td>
+                    <td>%kosten20%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox20" %autochecked20%>
+                    </td>
+                    <td><input type="number" id="load20" value="%load20%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief20" %active20%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button20">Opslaan</button>
+                </tr>
+                <!-- 21 uur-->
+                <tr>
+                    <td>21:00</td>
+                    <td>%kosten21%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox21" %autochecked21%>
+                    </td>
+                    <td><input type="number" id="load21" value="%load21%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief21" %active21%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button21">Opslaan</button>
+                </tr>
+                <!-- 22 uur-->
+                <tr>
+                    <td>22:00</td>
+                    <td>%kosten22%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox22" %autochecked22%>
+                    </td>
+                    <td><input type="number" id="load22" value="%load22%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief22" %active22%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button22">Opslaan</button>
+                </tr>
+                <!-- 23 uur-->
+                <tr>
+                    <td>23:00</td>
+                    <td>%kosten23%</td>
+                    <td>
+                        <label>Automatic</label>
+                        <input type="checkbox" id="checkbox23" %autochecked23%>
+                    </td>
+                    <td><input type="number" id="load23" value="%load23%" class="load-input"/></td>
+                    <td>
+                        <label>actief</label>
+                        <input type="checkbox" id="checkboxactief23" %active23%>
+                    </td>
+                    <td><button onclick="sendRowData(this)" id="button23">Opslaan</button>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>

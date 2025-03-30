@@ -1,17 +1,3 @@
-#include <dummy.h>
-
-/*
- * This ESP32 code is created by esp32io.com
- *
- * This ESP32 code is released in the public domain
- *
- * For more detail (instruction and wiring diagram), visit https://esp32io.com/tutorials/esp32-web-server
- * gebruik https://github.com/ESP32Async/AsyncTCP voor de htpp communicatie
- *
- * Op de sd card staat een folder met hierin de opgeslagen settings
- */
-
-// generic configuration
 #include <SPI.h>
 #include <Wire.h>
 
@@ -33,8 +19,7 @@
 #include <Adafruit_SSD1306.h>
 
 // time lib
-#include <TimeLib.h>
-#include <WiFiUdp.h>
+#include <Time.h>
 
 // client configuration
 #include <configuration.h>
@@ -58,6 +43,10 @@ int32_t selectedPower;
 int32_t batteryPercentage;
 int32_t currentBatteryPower;
 
+// time info
+struct tm timeinfo;
+time_t now;
+
 
 // lcd screen
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -80,12 +69,16 @@ void setup() {
   delay(1000);
 
   Initialize_Display();
+
+
   delay(1000);
   Initialize_Wifi_And_Server();
-  delay(1000);
-  CollectTimeData();
-  delay(1000);
+  delay(500);
+  UpdateDisplay(1, "Configure time...");
+  initTime(MY_TIME_ZONE);
+  UpdateDisplay(1, "Time configured...");
   // initialize the sd card
+  UpdateDisplay(1, "Initialize fs...");
   InitializeLittleFs();
   delay(1000);
   InitializeSdCard();
@@ -95,24 +88,25 @@ void setup() {
 
 void loop() {
   bool wifiConnected = false;
+  FillLocalTime();
+
   if (WiFi.status() != WL_CONNECTED) {
     connectToWiFi();
   } else {
     wifiConnected = true;
-    currentTime = now();
+    
+    currentTime = now;
     if (lastPriceUpdate < currentTime) {
       lastPriceUpdate = currentTime + (60 * 60);
 
       GetTibberData();
     }
-    if (timeStatus() != timeSet) {
-      CollectTimeData();
-    }
+
 
     delay(500);
     if (lastPowerUpdate < currentTime) {
       lastPowerUpdate = currentTime + 10;  // 10 secs
-      Serial.println("beeclear updated: " + PrintTime(now()));
+      Serial.println("beeclear updated: " + PrintTime());
       GetCurrentLoad();
     }
 
@@ -131,7 +125,7 @@ void ControlBattery(bool wifiConnected) {
   marstek_load scheduleConfiguration;
 
   // get the configuration of the battery
-  scheduleConfiguration = GetBatteryControlInfo(hour());
+  scheduleConfiguration = GetBatteryControlInfo(currentHour());
 
   if (scheduleConfiguration.enabled) {
     // get current AC power

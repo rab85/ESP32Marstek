@@ -53,4 +53,8 @@ table {
   background-color: lightblue;
   margin: 0 auto; /* Center the table */
 }
+body {
+  background-color: gray;
+  color: black; /* Ensure text is visible on a black background */
+}
 

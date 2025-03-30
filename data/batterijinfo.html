@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html>
+<script>
+ function updateDateTime() {
+        const now = new Date();
+        const formattedDateTime = now.toLocaleString();
+        document.getElementById('datetime').textContent = formattedDateTime;
+    }
 
+    setInterval(updateDateTime, 1000);
+    updateDateTime(); // Initial call to display immediately
+
+</script>
 <head>
     <title>Marstek Venus C controller Batterij info</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,8 +21,9 @@
 
 <body>
     <div class="center">
-        <h1>Marstek Venus C controller 20250321</h1>
+        <h1>Marstek Venus C controller 2025-03-30</h1>
         <a href="./">overzicht</a>
+        <div id="datetime"></div>
         <table border="1">
             <thead>
                 <tr>
@@ -31,6 +42,11 @@
                     <td></td>
                     <td>battery status</td>
                     <td>%status%</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>energie prijs</td>
+                    <td>%energieprijs%</td>
                 </tr>
                 <tr>
                     <td>32102</td>

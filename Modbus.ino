@@ -218,7 +218,7 @@ void dbgprint(const char* format, ...) {
   vsnprintf(sbuf, sizeof(sbuf), format, varArgs);  // Format the message
   va_end(varArgs);                                 // End of using parameters
 
-  dbgline = PrintTime(now()) + " :" + String(sbuf);  // Time and info to a String
+  dbgline = PrintTime() + " :" + String(sbuf);  // Time and info to a String
   Serial.println(dbgline.c_str());                   // and the info
 }
 
@@ -261,10 +261,10 @@ RTInfo_t GetRegisterData(int registerNummer, bool monitorOnly) {
   RTInfo_t result;
   int i;
   if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
-    if (lastModbusCommunication < now() || monitorOnly != lastModbusInfo) {
+    if (lastModbusCommunication < now || monitorOnly != lastModbusInfo) {
       lastModbusInfo = monitorOnly;
       get_modbus_data_regs(monitorOnly);
-      lastModbusCommunication = now() + 5;
+      lastModbusCommunication = now + 5;
     }
     for (i = 0; i < NUMIREGS; i++) {
 

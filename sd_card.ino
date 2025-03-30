@@ -1,7 +1,5 @@
 File myFile;
 
-
-
 marstek_load batteryconfiguration[24];
 const char* fileName = "/configuration.csv";
 
@@ -63,7 +61,6 @@ marstek_load GetBatteryControlInfo(int hour)
   Serial.print(config.power);
   Serial.print("automatic: ");
   Serial.print(config.automatic);
-  
 
   return config;
 }

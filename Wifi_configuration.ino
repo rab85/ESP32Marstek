@@ -1,13 +1,16 @@
 String ledState;
-// time udp client
-WiFiUDP Udp;
+
 String RegisterWaarde;
 String Register;
 String Lengte;
 String Type;
 
 
+
 void Initialize_Wifi_And_Server() {
+  // setup time and time zone settings
+
+
   Serial.println("Connecting to WiFi...");
   WiFi.hostname("marstekcontroller");
   WiFi.begin(ssid, password);
@@ -19,19 +22,11 @@ void Initialize_Wifi_And_Server() {
   Serial.println("Connected to WiFi");
   UpdateDisplay(1, "Connected to WiFi...");
   delay(500);
-  // turn display off to have a enough power from the master not to reset the board.
-  DisplayOff();
-  delay(500);
+
   // Print the ESP32's IP address
   Serial.print("ESP32 Web Server's IP address: ");
   Serial.println(WiFi.localIP());
 
-  // // // Define a route to serve the HTML page
-  //  server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-  //    Serial.println("ESP32 Web Server: New request received:");  // for debugging
-  //    Serial.println("GET /");        // for debugging
-  //    request->send(200, "text/html", "<html><body><h1>Hello, ESP32!</h1></body></html>");
-  //  });
   ConfigureWebServer();
 
   Serial.print("Server start ");
@@ -52,76 +47,57 @@ void connectToWiFi() {
   }
 }
 
-
-void CollectTimeData() {
-  Udp.begin(localPort);
-  Serial.println("Getting time from time server");
-  setSyncProvider(getNtpTime);
-  setSyncInterval(86400);  // sync everyday
-}
-
 int currentDay() {
-  return day();
+  FillLocalTime();
+  return timeinfo.tm_mday;
 }
 
 int currentHour() {
-  return hour();
+  FillLocalTime();
+  return timeinfo.tm_hour;
 }
 
-time_t getNtpTime() {
-  IPAddress ntpServerIP;  // NTP server's ip address
+void FillLocalTime() {
+  time(&now);
+  localtime_r(&now, &timeinfo);
+}
 
-  while (Udp.parsePacket() > 0)
-    ;  // discard any previously received packets
-  Serial.println("Transmit NTP Request");
-  // get a random server from the pool
-  WiFi.hostByName(ntpServerName, ntpServerIP);
-  Serial.print(ntpServerName);
-  Serial.print(": ");
-  Serial.println(ntpServerIP);
-  sendNTPpacket(ntpServerIP);
-  uint32_t beginWait = millis();
-  while (millis() - beginWait < 1500) {
-    int size = Udp.parsePacket();
-    if (size >= NTP_PACKET_SIZE) {
-      Serial.println("Receive NTP Response");
-      Udp.read(packetBuffer, NTP_PACKET_SIZE);  // read packet into the buffer
-      unsigned long secsSince1900;
-      // convert four bytes starting at location 40 to a long integer
-      secsSince1900 = (unsigned long)packetBuffer[40] << 24;
-      secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
-      secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
-      secsSince1900 |= (unsigned long)packetBuffer[43];
-      return secsSince1900 - 2208988800UL + timeZone * SECS_PER_HOUR;
-    }
+
+void setTimezone(String timezone) {
+  long dateinepoc;
+  Serial.printf("  Setting Timezone to %s\n", timezone.c_str());
+  setenv("TZ", timezone.c_str(), 1);  //  Now adjust the TZ.  Clock settings are adjusted to show the new local time
+  tzset();
+  // FillLocalTime();
+  
+  // Serial.print(timeinfo.tm_hour);
+  // Serial.print(":");
+  // Serial.print(timeinfo.tm_min);
+  // Serial.print(":");
+  // Serial.print(timeinfo.tm_sec);
+  // Serial.print("   ");
+  // Serial.print(timeinfo.tm_mday);
+  // Serial.print("-");
+  // Serial.print(timeinfo.tm_mon);
+  // Serial.print("-");
+  // Serial.println(timeinfo.tm_year);
+}
+
+void initTime(String timezone) {
+  struct tm timeinfo;
+
+  Serial.println("Setting up time");
+  configTime(0, 0, MY_NTP_SERVER);  // First connect to NTP server, with 0 TZ offset
+  if (!getLocalTime(&timeinfo)) {
+    Serial.println("  Failed to obtain time");
+    return;
   }
-  Serial.println("No NTP Response :-(");
-  return 0;  // return 0 if unable to get the time
+  Serial.println("  Got the time from NTP");
+  // Now we can set the real timezone
+  setTimezone(timezone);
+
+  //setTime(timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, timeinfo.tm_mday, timeinfo.tm_mon, timeinfo.tm_year);
 }
-
-// send an NTP request to the time server at the given address
-void sendNTPpacket(IPAddress &address) {
-  // set all bytes in the buffer to 0
-  memset(packetBuffer, 0, NTP_PACKET_SIZE);
-  // Initialize values needed to form NTP request
-  // (see URL above for details on the packets)
-  packetBuffer[0] = 0b11100011;  // LI, Version, Mode
-  packetBuffer[1] = 0;           // Stratum, or type of clock
-  packetBuffer[2] = 6;           // Polling Interval
-  packetBuffer[3] = 0xEC;        // Peer Clock Precision
-  // 8 bytes of zero for Root Delay & Root Dispersion
-  packetBuffer[12] = 49;
-  packetBuffer[13] = 0x4E;
-  packetBuffer[14] = 49;
-  packetBuffer[15] = 52;
-  // all NTP fields have been given values, now
-  // you can send a packet requesting a timestamp:
-  Udp.beginPacket(address, 123);  //NTP requests are to port 123
-  Udp.write(packetBuffer, NTP_PACKET_SIZE);
-  Udp.endPacket();
-}
-
-
 
 
 void ConfigureWebServer() {
@@ -211,9 +187,13 @@ String batteryprocessor(const String &var) {
   if (var.startsWith("Load")) {
     result = String(currentpower) + " Watt";
   } else if (var.startsWith("status")) {
-    double capacity=(BatteryCapacity * batteryPercentage)/100.0;
+    double capacity = (BatteryCapacity * batteryPercentage) / 100.0;
     result = String(capacity) + " Watt";
-  } else {
+  } else if (var.startsWith("energieprijs"))
+  {
+    result=String(GetCurrentPrice()+ " ct");
+  }
+  else {
     result = GetBatteryInfoForPage(var);
   }
   return result;

@@ -23,6 +23,7 @@
 
 // client configuration
 #include <configuration.h>
+#include <Secrets.h>
 
 // flash reading reading
 #include "LittleFS.h"
@@ -80,9 +81,10 @@ void setup() {
   // initialize the sd card
   UpdateDisplay(1, "Initialize fs...");
   InitializeLittleFs();
-  delay(1000);
+  UpdateDisplay(1, "Initialize SD...");
   InitializeSdCard();
   delay(1000);
+  UpdateDisplay(1, "Initialize Modbus...");
   setupModbus();
 }
 
@@ -94,11 +96,10 @@ void loop() {
     connectToWiFi();
   } else {
     wifiConnected = true;
-    
+
     currentTime = now;
     if (lastPriceUpdate < currentTime) {
       lastPriceUpdate = currentTime + (60 * 60);
-
       GetTibberData();
     }
 
@@ -109,7 +110,9 @@ void loop() {
       Serial.println("beeclear updated: " + PrintTime());
       GetCurrentLoad();
     }
-
+    // update the info for the display
+    UpdateBatteryInfo();
+    // use the updated data if needed
     if (lastBatteryChange < currentTime) {
       lastBatteryChange = currentTime + 20;
       ControlBattery(wifiConnected);
@@ -120,21 +123,22 @@ void loop() {
   delay(500);
 }
 
-void ControlBattery(bool wifiConnected) {
+void UpdateBatteryInfo() {
   RTInfo_t batinfo;
-  marstek_load scheduleConfiguration;
+  batinfo = GetRegisterData(32202, true);
+  currentBatteryPower = batinfo.value;
+  // get percentage
+  batinfo = GetRegisterData(32104, true);
+  batteryPercentage = batinfo.value;
+}
 
+void ControlBattery(bool wifiConnected) {
+
+  marstek_load scheduleConfiguration;
   // get the configuration of the battery
   scheduleConfiguration = GetBatteryControlInfo(currentHour());
 
   if (scheduleConfiguration.enabled) {
-    // get current AC power
-    batinfo = GetRegisterData(32202, true);
-    currentBatteryPower = batinfo.value;
-    // get percentage
-    batinfo = GetRegisterData(32104, true);
-    batteryPercentage = batinfo.value;
-
     if (scheduleConfiguration.automatic) {
       if (wifiConnected) {
         ControlBatteryAutomatic(currentBatteryPower);
@@ -170,7 +174,7 @@ void ControlBatteryAutomatic(int32_t currentBatteryPower) {
 
   requiredPower = CalculateBatteryPower(currentBatteryPower);
 
-  if (currentBatteryPower == 0 && requiredPower > -50 && requiredPower < 200) {
+  if (currentBatteryPower == 0 && requiredPower > -50 && requiredPower < 75) {
     SetBatteryOutput(0, batteryPercentage);
     noPower = true;
   } else {
@@ -194,7 +198,7 @@ int CalculateBatteryPower(int currentBatteryPower) {
     } else if (currentpower > 0 && currentBatteryPower <= 0) {
       requiredPower = -(currentpower + abs(currentBatteryPower));
     } else if (currentpower > 0 && currentBatteryPower >= 0) {
-      requiredPower = -(currentpower - currentBatteryPower);
+      requiredPower = (currentBatteryPower - currentpower);
     } else if (currentpower < 0 && currentBatteryPower >= 0) {
       requiredPower = abs(currentpower) + currentBatteryPower;
     } else {
@@ -209,9 +213,9 @@ int CalculateBatteryPower(int currentBatteryPower) {
 
   Serial.print("CurrentPower: ");
   Serial.print(currentpower);
-  Serial.print(" currentBatteryPower: ");
+  Serial.print("currentBatteryPower: ");
   Serial.print(currentBatteryPower);
-  Serial.print(" requiredPower: ");
+  Serial.print("requiredPower: ");
   Serial.print(requiredPower);
 
   selectedPower = requiredPower;

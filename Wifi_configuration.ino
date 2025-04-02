@@ -48,12 +48,10 @@ void connectToWiFi() {
 }
 
 int currentDay() {
-  FillLocalTime();
   return timeinfo.tm_mday;
 }
 
 int currentHour() {
-  FillLocalTime();
   return timeinfo.tm_hour;
 }
 

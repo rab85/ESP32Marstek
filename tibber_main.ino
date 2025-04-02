@@ -80,7 +80,7 @@ void parseTibberJson(DynamicJsonDocument jsonDoc) {
   int size = sizeof(PRICES.price);
   // 0 is today, 1 is tomorrow
   int day = 0;
-  int hour = currentHour();
+  int hour = currentHour()-1;
   int tmpHour;
   // We need the first six letters to parse the price level
   char tmpLevel[6];

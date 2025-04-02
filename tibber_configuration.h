@@ -5,8 +5,7 @@ const String tibberApi = "https://api.tibber.com/v1-beta/gql";
 // GraphQL query for Tibber API to get the current price
 const char *query = "{viewer {homes {currentSubscription {priceInfo {current {total}}}}}}";
 
-// API token for Tibber demo
-const String tibber_accces_token = "Tibber Access TOKEN";
+
 
 
 const char* root_ca = \ 

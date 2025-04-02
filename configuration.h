@@ -1,7 +1,4 @@
-// wifi settings
 
-const char* ssid = "SID";      // CHANGE IT
-const char* password = "PASSWORD";  // CHANGE IT
 
 // time settings
 #define MY_NTP_SERVER "nl.pool.ntp.org"

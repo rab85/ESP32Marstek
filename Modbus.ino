@@ -71,14 +71,23 @@ void postTransmission() {
 void setupModbus() {
 
   pinMode(PIN_5V_EN, OUTPUT);
-  digitalWrite(PIN_5V_EN, HIGH);
 
+  UpdateDisplay(1, "Pin_5v_...");
+  delay(1000);
+  digitalWrite(PIN_5V_EN, HIGH);
   pinMode(RS485_EN_PIN, OUTPUT);
   pinMode(RS485_SE_PIN, OUTPUT);
 
+  UpdateDisplay(1, "RS485_SE_PIN_...");
+  delay(1000);
   digitalWrite(RS485_SE_PIN, HIGH);
+
+  delay(1000);
+  UpdateDisplay(1, "RRS485_EN_PIN_...");
   digitalWrite(RS485_EN_PIN, HIGH);
 
+  delay(1000);
+  UpdateDisplay(1, "Set semaphore");
   // Initialize the mutex
   xMutex = xSemaphoreCreateMutex();
   if (xMutex == NULL) {
@@ -219,7 +228,7 @@ void dbgprint(const char* format, ...) {
   va_end(varArgs);                                 // End of using parameters
 
   dbgline = PrintTime() + " :" + String(sbuf);  // Time and info to a String
-  Serial.println(dbgline.c_str());                   // and the info
+  Serial.println(dbgline.c_str());              // and the info
 }
 
 const char* get_modbus_errstr(uint8_t err) {
@@ -238,10 +247,6 @@ const char* get_modbus_errstr(uint8_t err) {
   }
   return resstr;  // Return resulting string
 }
-
-
-
-
 
 String GetBatteryInfoForPage(String registerNummer) {
   String result = "not found";
@@ -295,6 +300,9 @@ void SetBatteryOutput(int32_t power, int32_t batteryPercentage) {
 
 void ConfigureDisChargePower(int power) {
   int i;
+  if (abs(power) > abs(MaxReturnPower))
+    power = MaxReturnPower;
+
   for (i = 0; i < NUMOREGS; i++) {
     if (ctdata[i].mb_regnr == 42010) {
       ctdata[i].value = 2;
@@ -312,6 +320,9 @@ void ConfigureDisChargePower(int power) {
 
 void ConfigureChargePower(int power) {
   int i;
+  if (abs(power) > MaxLoadPower)
+    power = MaxLoadPower;
+
   for (i = 0; i < NUMOREGS; i++) {
     if (ctdata[i].mb_regnr == 42010) {
       ctdata[i].value = 1;

@@ -29,6 +29,7 @@ void DisplayInfo() {
   display.println("Beschikbaar: " + String((batteryPercentage * BatteryCapacity) / 100) + " W");
   display.println("Percentage: " + String(batteryPercentage) + " %");
   display.println("Kosten: " + GetCurrentPrice() + " ct");
+  //display.println("uur: " + String(currentHour()) + " day: "+ String(currentDay()));
 
   display.display();
 }

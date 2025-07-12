@@ -169,6 +169,24 @@ String GetCurrentPrice() {
   return "onbekend";
 }
 
+
+double GetCurrentPriceValue()
+{
+   int day = currentDay();
+  int hour = currentHour();
+  for (int i = 0; i <= 23; i++) {
+    if (!PRICES.price[i].isNull) {
+      if (PRICES.price[i].day == day && PRICES.price[i].hour == hour)
+      //if (PRICES.price[i].hour == hour)
+        return (double)PRICES.price[i].price / 10;
+    }
+  }
+  return -1;
+}
+
+
+
+
 String GetPriceForHour(int hour) {
    for (int i = 0; i <= 23; i++) {
     if (!PRICES.price[i].isNull) {

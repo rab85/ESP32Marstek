@@ -1,4 +1,7 @@
+// wifi settings
 
+const char* ssid = "SID";      // CHANGE IT
+const char* password = "PASSWORD";  // CHANGE IT
 
 // time settings
 #define MY_NTP_SERVER "nl.pool.ntp.org"
@@ -24,8 +27,8 @@ struct RTInfo_t  // Structure of Real-time input data
 };
 
 
-const int minBatteryPercentage = 20;
-const int minPowerLoad= -75;
+const int32_t minBatteryPercentage = 15;
+const int32_t maxBatteryPercentage = 98;
 
 const int MaxReturnPower = -800;
 const int MaxLoadPower = 1000;
@@ -36,7 +39,7 @@ const int BatteryCapacity = 2500;
 #define SCREEN_HEIGHT 64     // OLED display height, in pixels
 #define OLED_RESET -1        // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C  ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
-#define ROTATION 2           // Rotates text on OLED 1=90 degrees, 2=180 degrees
+#define ROTATION 0           // Rotates text on OLED 1=90 degrees, 2=180 degrees
 #define SDA_PIN 32
 #define SCL_PIN 33
 

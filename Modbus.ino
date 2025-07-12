@@ -3,6 +3,7 @@ unsigned long lastModbusCommunication;
 
 bool modbusOkay = false;  // False if Modbus error seen
 bool lastModbusInfo;
+int lastpower = 0;
 
 // Create a mutex handle
 SemaphoreHandle_t xMutex;
@@ -73,21 +74,19 @@ void setupModbus() {
   pinMode(PIN_5V_EN, OUTPUT);
 
   UpdateDisplay(1, "Pin_5v_...");
-  delay(1000);
+
   digitalWrite(PIN_5V_EN, HIGH);
   pinMode(RS485_EN_PIN, OUTPUT);
   pinMode(RS485_SE_PIN, OUTPUT);
 
   UpdateDisplay(1, "RS485_SE_PIN_...");
-  delay(1000);
+
   digitalWrite(RS485_SE_PIN, HIGH);
 
-  delay(1000);
+
   UpdateDisplay(1, "RRS485_EN_PIN_...");
   digitalWrite(RS485_EN_PIN, HIGH);
 
-  delay(1000);
-  UpdateDisplay(1, "Set semaphore");
   // Initialize the mutex
   xMutex = xSemaphoreCreateMutex();
   if (xMutex == NULL) {
@@ -98,7 +97,7 @@ void setupModbus() {
 
 
   Serial1.begin(115200, SERIAL_8N1, RS485_RX_PIN, RS485_TX_PIN);
-  delay(500);
+  delay(100);
   postTransmission();
   node.begin(1, Serial1);
   node.preTransmission(preTransmission);
@@ -248,6 +247,7 @@ const char* get_modbus_errstr(uint8_t err) {
   return resstr;  // Return resulting string
 }
 
+
 String GetBatteryInfoForPage(String registerNummer) {
   String result = "not found";
   int i;
@@ -285,16 +285,29 @@ RTInfo_t GetRegisterData(int registerNummer, bool monitorOnly) {
 
 
 void SetBatteryOutput(int32_t power, int32_t batteryPercentage) {
+  int maxBatteryPercentage = GetMaxBatteryPercentage();
+
   if (power < 0 && batteryPercentage > minBatteryPercentage) {
-    ConfigureDisChargePower(power);
+    if (lastpower != power) {
+      ConfigureDisChargePower(power);
+    }
   } else if (power > 0 && batteryPercentage < maxBatteryPercentage) {
-    ConfigureChargePower(power);
+    if (lastpower != power) {
+      ConfigureChargePower(power);
+    }
   } else {
-    ConfigureNoPower();
+    if (power != 0) {
+      ConfigureNoPower();
+      power = 0;
+    }
   }
-  if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
-    put_modbus_data_regs();
-    xSemaphoreGive(xMutex);
+  if (power != lastpower) {
+    if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
+      put_modbus_data_regs();
+      xSemaphoreGive(xMutex);
+
+      lastpower = power;
+    }
   }
 }
 
@@ -302,6 +315,9 @@ void ConfigureDisChargePower(int power) {
   int i;
   if (abs(power) > abs(MaxReturnPower))
     power = MaxReturnPower;
+
+  if (abs(power) < abs(minPowerLoad))
+    power = minPowerLoad;
 
   for (i = 0; i < NUMOREGS; i++) {
     if (ctdata[i].mb_regnr == 42010) {
@@ -351,4 +367,17 @@ void ConfigureNoPower() {
     }
   }
   SetPixelColorNone();
+}
+
+int32_t GetMaxBatteryPercentage() {
+  int daynr = weekDay();
+  // monday and friday 100% other days just 98%
+  if (daynr == 1 || daynr == 5)
+    return 100;
+  else
+    return 97;
+}
+
+int GetCurrentBatteyPower() {
+  return lastpower;
 }

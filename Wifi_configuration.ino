@@ -11,7 +11,7 @@ void Initialize_Wifi_And_Server() {
   // setup time and time zone settings
 
 
-  Serial.println("Connecting to WiFi...");
+  Serial.println("Connecting to WiFi..." + String(ssid));
   WiFi.hostname("marstekcontroller");
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
@@ -38,6 +38,7 @@ void connectToWiFi() {
   int TryCount = 0;
   while (WiFi.status() != WL_CONNECTED) {
     TryCount++;
+    Serial.println("Connecting to WiFi..." + String(ssid));
     WiFi.disconnect();
     WiFi.begin(ssid, password);
     vTaskDelay(4000);
@@ -55,6 +56,10 @@ int currentHour() {
   return timeinfo.tm_hour;
 }
 
+int weekDay(){
+  return timeinfo.tm_wday;
+}
+
 void FillLocalTime() {
   time(&now);
   localtime_r(&now, &timeinfo);
@@ -67,7 +72,7 @@ void setTimezone(String timezone) {
   setenv("TZ", timezone.c_str(), 1);  //  Now adjust the TZ.  Clock settings are adjusted to show the new local time
   tzset();
   // FillLocalTime();
-  
+
   // Serial.print(timeinfo.tm_hour);
   // Serial.print(":");
   // Serial.print(timeinfo.tm_min);
@@ -187,11 +192,9 @@ String batteryprocessor(const String &var) {
   } else if (var.startsWith("status")) {
     double capacity = (BatteryCapacity * batteryPercentage) / 100.0;
     result = String(capacity) + " Watt";
-  } else if (var.startsWith("energieprijs"))
-  {
-    result=String(GetCurrentPrice()+ " ct");
-  }
-  else {
+  } else if (var.startsWith("energieprijs")) {
+    result = String(GetCurrentPrice() + " ct");
+  } else {
     result = GetBatteryInfoForPage(var);
   }
   return result;

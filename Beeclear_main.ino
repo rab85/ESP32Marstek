@@ -1,5 +1,8 @@
 const char* beeclearUrl = "http://beeclear/bc_current";
 
+/* if not authenticated run following command from browser*/
+/* http://beeclear/bc_security?set=off */
+
 void GetCurrentLoad() {
   HTTPClient http;
 
@@ -35,7 +38,7 @@ void ProcessJsonData(String payload) {
   {
   returnpower=doc["leveren1"];
   }
-  currentpower=power-returnpower;
+  currentLoad=power-returnpower;
 
  //Serial.println("payload Total: " + String(currentpower) + " power: " + String(power)+ " returnpower: "+ String(returnpower) );
   

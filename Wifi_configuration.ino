@@ -11,13 +11,14 @@ void Initialize_Wifi_And_Server() {
   // setup time and time zone settings
 
 
-  Serial.println("Connecting to WiFi...");
+  Serial.println("Connecting to WiFi..." + String(ssid));
   WiFi.hostname("marstekcontroller");
   WiFi.begin(ssid, password);
+  String extend = "";
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    Serial.println("Connecting to WiFi...");
-    UpdateDisplay(1, "Connecting to WiFi...");
+    UpdateDisplay(1, "Connecting to WiFi..." + extend);
+    extend += ".";
   }
   Serial.println("Connected to WiFi");
   UpdateDisplay(1, "Connected to WiFi...");
@@ -38,6 +39,7 @@ void connectToWiFi() {
   int TryCount = 0;
   while (WiFi.status() != WL_CONNECTED) {
     TryCount++;
+    Serial.println("Connecting to WiFi..." + String(ssid));
     WiFi.disconnect();
     WiFi.begin(ssid, password);
     vTaskDelay(4000);
@@ -55,6 +57,10 @@ int currentHour() {
   return timeinfo.tm_hour;
 }
 
+int weekDay() {
+  return timeinfo.tm_wday;
+}
+
 void FillLocalTime() {
   time(&now);
   localtime_r(&now, &timeinfo);
@@ -67,7 +73,7 @@ void setTimezone(String timezone) {
   setenv("TZ", timezone.c_str(), 1);  //  Now adjust the TZ.  Clock settings are adjusted to show the new local time
   tzset();
   // FillLocalTime();
-  
+
   // Serial.print(timeinfo.tm_hour);
   // Serial.print(":");
   // Serial.print(timeinfo.tm_min);
@@ -99,6 +105,11 @@ void initTime(String timezone) {
 
 
 void ConfigureWebServer() {
+
+  server.on("/status", HTTP_GET, handleGetStatus);
+  server.on("/data", HTTP_POST, handlePostRequest, NULL, handlePostBody);
+
+
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(LittleFS, "/index.html", String(), false, indexprocessor);
@@ -183,16 +194,72 @@ String indexprocessor(const String &var) {
 String batteryprocessor(const String &var) {
   String result = "";
   if (var.startsWith("Load")) {
-    result = String(currentpower) + " Watt";
+    result = String(currentLoad) + " Watt";
   } else if (var.startsWith("status")) {
     double capacity = (BatteryCapacity * batteryPercentage) / 100.0;
     result = String(capacity) + " Watt";
-  } else if (var.startsWith("energieprijs"))
-  {
-    result=String(GetCurrentPrice()+ " ct");
-  }
-  else {
+  } else if (var.startsWith("energieprijs")) {
+    result = String(GetCurrentPrice() + " ct l:" + String(GetPriceLevel()));
+  } else {
     result = GetBatteryInfoForPage(var);
   }
   return result;
+}
+
+void handleGetStatus(AsyncWebServerRequest *request) {
+  StaticJsonDocument<200> doc;
+  doc["status"] = "OK";
+  doc["uptime_ms"] = millis();
+  doc["load"] = GetCurrentBatteyPower();
+
+  String response;
+  serializeJson(doc, response);
+
+  request->send(200, "application/json", response);
+}
+
+void handlePostRequest(AsyncWebServerRequest *request) {
+  // this is a dummy function to keep the compiler happy
+}
+
+void handlePostBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+  String body = "";
+  for (size_t i = 0; i < len; i++) {
+    body += (char)data[i];
+  }
+  if (body == "") {
+    request->send(400, "application/json", "{\"error\":\"No body received\"}");
+    return;
+  }
+
+  Serial.println(body);
+
+  // Parse incoming JSON
+  StaticJsonDocument<200> doc;
+  DeserializationError error = deserializeJson(doc, body);
+
+  if (error) {
+    request->send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
+    return;
+  }
+
+  // Example: read a field from JSON
+  const char *requestLoad = doc["load"] | "";
+  if (strcmp(requestLoad, "") == 0) {
+    request->send(400, "application/json", "{\"error\":\"Load not specified\"}");
+    return;
+  }
+
+  int requested = String(requestLoad).toInt();
+
+  bool result = ExternalControlBattery(requested);
+  if (result) {
+    StaticJsonDocument<200> res;
+    res["requested"] = requested;
+    String response;
+    serializeJson(res, response);
+    request->send(200, "application/json", response);
+  }
+  // not allowed
+  request->send(409, "application/json", "");
 }

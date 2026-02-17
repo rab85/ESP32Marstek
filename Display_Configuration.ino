@@ -23,12 +23,12 @@ void DisplayInfo() {
   display.clearDisplay();
   display.setCursor(0, 0);
   display.println(PrintTime());
-  display.println("Verbruik: " + String(currentpower) + " W");
+  display.println("Verbruik: " + String(currentLoad) + " W");
   display.println("Battery : " + String(-currentBatteryPower) + " W");
   display.println("Berekend : " + String(selectedPower) + " W");
   display.println("Beschikbaar: " + String((batteryPercentage * BatteryCapacity) / 100) + " W");
-  display.println("Percentage: " + String(batteryPercentage) + " %");
-  display.println("Kosten: " + GetCurrentPrice() + " ct");
+  display.println("Perc: " + String(batteryPercentage) + " % "+  String(profit, 3));
+  display.println("Kosten: " + GetCurrentPrice() + " ct" + " l:" + String(GetPriceLevel()));
   //display.println("uur: " + String(currentHour()) + " day: "+ String(currentDay()));
 
   display.display();
@@ -69,8 +69,7 @@ void UpdateDisplay(int line, String data) {
 //   return twoDigits(String(epochtime / 3600 % 24)) + ":" + twoDigits(String(epochtime / 60 % 60)) + ":" + twoDigits(String(epochtime % 60));
 // }
 
-String PrintTime()
-{
+String PrintTime() {
   return twoDigits(String(timeinfo.tm_hour)) + ":" + twoDigits(String(timeinfo.tm_min)) + ":" + twoDigits(String(timeinfo.tm_sec));
 }
 

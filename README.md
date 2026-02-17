@@ -24,5 +24,7 @@ const int MaxReturnPower = -800;
 const int MaxLoadPower = 1000;
 const int BatteryCapacity = 2500;
 
-
+# bevinding van de batterij
+Opeens heeft de batterij 1000 kw op een dag geladen. De totale batterij gegevens kloppen niet meer.
+Daarom de waardes van register 33000 en 33002 gereset zodat e.a. weer klopt.
 

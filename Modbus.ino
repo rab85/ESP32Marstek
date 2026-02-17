@@ -3,6 +3,7 @@ unsigned long lastModbusCommunication;
 
 bool modbusOkay = false;  // False if Modbus error seen
 bool lastModbusInfo;
+int lastpower = -1;
 
 // Create a mutex handle
 SemaphoreHandle_t xMutex;
@@ -30,6 +31,7 @@ struct controlout_t  // Structure of control output data
   uint16_t mb_regnr;  // ModBus registernummer
   char name[30];      // Naam van het register
   int16_t value;      // Output data
+  char info[30];      // info data
 };
 
 controlout_t ctdata[] =  // Structure of control output data
@@ -73,21 +75,19 @@ void setupModbus() {
   pinMode(PIN_5V_EN, OUTPUT);
 
   UpdateDisplay(1, "Pin_5v_...");
-  delay(1000);
+
   digitalWrite(PIN_5V_EN, HIGH);
   pinMode(RS485_EN_PIN, OUTPUT);
   pinMode(RS485_SE_PIN, OUTPUT);
 
   UpdateDisplay(1, "RS485_SE_PIN_...");
-  delay(1000);
+
   digitalWrite(RS485_SE_PIN, HIGH);
 
-  delay(1000);
+
   UpdateDisplay(1, "RRS485_EN_PIN_...");
   digitalWrite(RS485_EN_PIN, HIGH);
 
-  delay(1000);
-  UpdateDisplay(1, "Set semaphore");
   // Initialize the mutex
   xMutex = xSemaphoreCreateMutex();
   if (xMutex == NULL) {
@@ -98,7 +98,7 @@ void setupModbus() {
 
 
   Serial1.begin(115200, SERIAL_8N1, RS485_RX_PIN, RS485_TX_PIN);
-  delay(500);
+  delay(100);
   postTransmission();
   node.begin(1, Serial1);
   node.preTransmission(preTransmission);
@@ -156,6 +156,23 @@ bool get_modbus_data_regs(bool monitorOnly) {
       if (dt == "u32") {
         value32 = value << 16 | node.getResponseBuffer(1);
       }
+
+      // if(dt == "l16")
+      // {
+      //   value32 = value;  // Converteer u16 naar float
+      //   switch(value32)
+      //   {
+      //     case 1:
+      //     rtdata[i].info="standby";
+      //     break;
+      //     case 2:
+      //     rtdata[i].info="laden";
+      //     break;
+      //     case 3:
+      //     rtdata[i].info="ontladen";
+      //     break;
+      //   }
+      // }
 
       delay(20);  // Laat anderen toe
 
@@ -248,6 +265,7 @@ const char* get_modbus_errstr(uint8_t err) {
   return resstr;  // Return resulting string
 }
 
+
 String GetBatteryInfoForPage(String registerNummer) {
   String result = "not found";
   int i;
@@ -255,9 +273,16 @@ String GetBatteryInfoForPage(String registerNummer) {
 
   // get all data;
   RTInfo_t data = GetRegisterData(registerid, false);
-
-  result = String(data.value) + " " + data.unity;
-
+  
+  int32_t value = data.value;
+  if(registerid==35100)
+  {
+    result=DetermineBatteryMode(value);
+  }
+  else
+  {
+    result = String(value) + " " + data.unity;
+  }
   return result;
 }
 
@@ -285,16 +310,28 @@ RTInfo_t GetRegisterData(int registerNummer, bool monitorOnly) {
 
 
 void SetBatteryOutput(int32_t power, int32_t batteryPercentage) {
+  int32_t maxBatteryPercentage = GetMaxBatteryPercentage();
+
   if (power < 0 && batteryPercentage > minBatteryPercentage) {
-    ConfigureDisChargePower(power);
+    if (lastpower != power) {
+      ConfigureDisChargePower(power);
+    }
   } else if (power > 0 && batteryPercentage < maxBatteryPercentage) {
-    ConfigureChargePower(power);
+    if (lastpower != power) {
+      ConfigureChargePower(power);
+    }
   } else {
     ConfigureNoPower();
+    power=0;
   }
-  if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
-    put_modbus_data_regs();
-    xSemaphoreGive(xMutex);
+
+  if (power != lastpower) {
+    if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
+      put_modbus_data_regs();
+      xSemaphoreGive(xMutex);
+
+      lastpower = power;
+    }
   }
 }
 
@@ -302,6 +339,7 @@ void ConfigureDisChargePower(int power) {
   int i;
   if (abs(power) > abs(MaxReturnPower))
     power = MaxReturnPower;
+
 
   for (i = 0; i < NUMOREGS; i++) {
     if (ctdata[i].mb_regnr == 42010) {
@@ -351,4 +389,30 @@ void ConfigureNoPower() {
     }
   }
   SetPixelColorNone();
+}
+
+int32_t GetMaxBatteryPercentage() {
+  int daynr = weekDay();
+  // monday and friday 100% other days just 98%
+  if (daynr == 1 || daynr == 5)
+    return 100;
+  else
+    return 99;
+}
+
+int GetCurrentBatteyPower() {
+  return lastpower;
+}
+
+String DetermineBatteryMode(int32_t value)
+{
+  switch(value)
+  {
+    case 1:
+      return "Stand-by";
+    case 2:
+      return "Laden";
+    default:
+      return "Ontladen";
+  }
 }

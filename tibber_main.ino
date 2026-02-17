@@ -22,7 +22,7 @@ struct tibber_prices {
 tibber_prices PRICES;
 
 void GetTibberData() {
-  
+
 
   NetworkClientSecure *client = new NetworkClientSecure;
   if (client) {
@@ -80,10 +80,10 @@ void parseTibberJson(DynamicJsonDocument jsonDoc) {
   int size = sizeof(PRICES.price);
   // 0 is today, 1 is tomorrow
   int day = 0;
-  int hour = currentHour()-1;
+  int hour = currentHour() - 1;
   int tmpHour;
   // We need the first six letters to parse the price level
-  char tmpLevel[6];
+  char tmpLevel[15];
   // Reset maximum/minimum price for the next 24 hours - Values will be overwritten with first price
   PRICES.maximumPrice = 1;
   PRICES.minimumPrice = 1000;
@@ -132,7 +132,13 @@ void parseTibberJson(DynamicJsonDocument jsonDoc) {
           tmpPrice.level = 2;
           break;
         case 'V':
-          tmpPrice.level = (tmpLevel[5] = 'E') ? 5 : 1;
+          Serial.print("level string:");
+          Serial.println(tmpLevel);        
+          if (String(tmpLevel) == "VERY_CHEAP")
+            tmpPrice.level = 1;
+          else
+            tmpPrice.level = 5;
+
           break;
       }
       tmpPrice.isNull = false;
@@ -162,22 +168,35 @@ String GetCurrentPrice() {
   for (int i = 0; i <= 23; i++) {
     if (!PRICES.price[i].isNull) {
       if (PRICES.price[i].day == day && PRICES.price[i].hour == hour)
-      //if (PRICES.price[i].hour == hour)
+        //if (PRICES.price[i].hour == hour)
         return String((double)PRICES.price[i].price / 10);
     }
   }
   return "onbekend";
 }
 
-
-double GetCurrentPriceValue()
-{
-   int day = currentDay();
+int GetPriceLevel() {
+  int day = currentDay();
   int hour = currentHour();
   for (int i = 0; i <= 23; i++) {
     if (!PRICES.price[i].isNull) {
       if (PRICES.price[i].day == day && PRICES.price[i].hour == hour)
-      //if (PRICES.price[i].hour == hour)
+        return PRICES.price[i].level;
+    }
+  }
+  return 5;
+}
+
+
+
+
+double GetCurrentPriceValue() {
+  int day = currentDay();
+  int hour = currentHour();
+  for (int i = 0; i <= 23; i++) {
+    if (!PRICES.price[i].isNull) {
+      if (PRICES.price[i].day == day && PRICES.price[i].hour == hour)
+        //if (PRICES.price[i].hour == hour)
         return (double)PRICES.price[i].price / 10;
     }
   }
@@ -188,10 +207,10 @@ double GetCurrentPriceValue()
 
 
 String GetPriceForHour(int hour) {
-   for (int i = 0; i <= 23; i++) {
+  for (int i = 0; i <= 23; i++) {
     if (!PRICES.price[i].isNull) {
       if (PRICES.price[i].hour == hour)
-        return String((double)PRICES.price[i].price / 10);
+        return String((double)PRICES.price[i].price / 10) + " " + String(PRICES.price[i].level);
     }
   }
   return "onbekend";

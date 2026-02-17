@@ -3,7 +3,7 @@ unsigned long lastModbusCommunication;
 
 bool modbusOkay = false;  // False if Modbus error seen
 bool lastModbusInfo;
-int lastpower = 0;
+int lastpower = -1;
 
 // Create a mutex handle
 SemaphoreHandle_t xMutex;
@@ -31,6 +31,7 @@ struct controlout_t  // Structure of control output data
   uint16_t mb_regnr;  // ModBus registernummer
   char name[30];      // Naam van het register
   int16_t value;      // Output data
+  char info[30];      // info data
 };
 
 controlout_t ctdata[] =  // Structure of control output data
@@ -156,6 +157,23 @@ bool get_modbus_data_regs(bool monitorOnly) {
         value32 = value << 16 | node.getResponseBuffer(1);
       }
 
+      // if(dt == "l16")
+      // {
+      //   value32 = value;  // Converteer u16 naar float
+      //   switch(value32)
+      //   {
+      //     case 1:
+      //     rtdata[i].info="standby";
+      //     break;
+      //     case 2:
+      //     rtdata[i].info="laden";
+      //     break;
+      //     case 3:
+      //     rtdata[i].info="ontladen";
+      //     break;
+      //   }
+      // }
+
       delay(20);  // Laat anderen toe
 
       rtdata[i].value = value32 / rtdata[i].A;  // Scale and store data
@@ -255,9 +273,16 @@ String GetBatteryInfoForPage(String registerNummer) {
 
   // get all data;
   RTInfo_t data = GetRegisterData(registerid, false);
-
-  result = String(data.value) + " " + data.unity;
-
+  
+  int32_t value = data.value;
+  if(registerid==35100)
+  {
+    result=DetermineBatteryMode(value);
+  }
+  else
+  {
+    result = String(value) + " " + data.unity;
+  }
   return result;
 }
 
@@ -285,7 +310,7 @@ RTInfo_t GetRegisterData(int registerNummer, bool monitorOnly) {
 
 
 void SetBatteryOutput(int32_t power, int32_t batteryPercentage) {
-  int maxBatteryPercentage = GetMaxBatteryPercentage();
+  int32_t maxBatteryPercentage = GetMaxBatteryPercentage();
 
   if (power < 0 && batteryPercentage > minBatteryPercentage) {
     if (lastpower != power) {
@@ -296,11 +321,10 @@ void SetBatteryOutput(int32_t power, int32_t batteryPercentage) {
       ConfigureChargePower(power);
     }
   } else {
-    if (power != 0) {
-      ConfigureNoPower();
-      power = 0;
-    }
+    ConfigureNoPower();
+    power=0;
   }
+
   if (power != lastpower) {
     if (xSemaphoreTake(xMutex, portMAX_DELAY) == pdTRUE) {
       put_modbus_data_regs();
@@ -316,8 +340,6 @@ void ConfigureDisChargePower(int power) {
   if (abs(power) > abs(MaxReturnPower))
     power = MaxReturnPower;
 
-  if (abs(power) < abs(minPowerLoad))
-    power = minPowerLoad;
 
   for (i = 0; i < NUMOREGS; i++) {
     if (ctdata[i].mb_regnr == 42010) {
@@ -375,9 +397,22 @@ int32_t GetMaxBatteryPercentage() {
   if (daynr == 1 || daynr == 5)
     return 100;
   else
-    return 97;
+    return 99;
 }
 
 int GetCurrentBatteyPower() {
   return lastpower;
+}
+
+String DetermineBatteryMode(int32_t value)
+{
+  switch(value)
+  {
+    case 1:
+      return "Stand-by";
+    case 2:
+      return "Laden";
+    default:
+      return "Ontladen";
+  }
 }

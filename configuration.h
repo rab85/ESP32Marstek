@@ -24,8 +24,9 @@ struct RTInfo_t  // Structure of Real-time input data
 };
 
 
-const int minBatteryPercentage = 20;
-const int minPowerLoad= -75;
+const int minBatteryPercentage = 12;
+const int minPowerexport= -75;
+const int minPowerload = 50;
 
 const int MaxReturnPower = -800;
 const int MaxLoadPower = 1000;
@@ -54,7 +55,7 @@ Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 #define SD_CS 13
 
 // modbus configuratie
-#ifndef __CONFIG_H__
+#ifndef __CONFIG_H__PIN
 #define __CONFIG_H__
 
 // PIN

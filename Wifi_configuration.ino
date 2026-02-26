@@ -243,14 +243,12 @@ void handlePostBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, s
     return;
   }
 
-  // Example: read a field from JSON
-  const char *requestLoad = doc["load"] | "";
-  if (strcmp(requestLoad, "") == 0) {
+  int requested = doc["load"] | 9999999;
+
+  if (requested == 9999999) {
     request->send(400, "application/json", "{\"error\":\"Load not specified\"}");
     return;
   }
-
-  int requested = String(requestLoad).toInt();
 
   bool result = ExternalControlBattery(requested);
   if (result) {
@@ -259,6 +257,7 @@ void handlePostBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, s
     String response;
     serializeJson(res, response);
     request->send(200, "application/json", response);
+    return;
   }
   // not allowed
   request->send(409, "application/json", "");

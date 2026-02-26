@@ -4,7 +4,7 @@ De modbus koppeling is gebasseerd op de EdZelf marstek koppeling.
 Hierbij is de NOM functie wel aangepast.
 
 # Uitgangspunten
-P1 meter is een beeclear device. Deze wordt later vervangen door de pulse info vanuit tibber
+P1 meter is een homewizard
 Tibber wordt gebruikt voor de price info. (Deze info wordt alleen weergegeven).
 Display is een Adafruit 320*120 display.
 Board is een lily go tcan 485 (esp 32 controller).
@@ -24,7 +24,4 @@ const int MaxReturnPower = -800;
 const int MaxLoadPower = 1000;
 const int BatteryCapacity = 2500;
 
-# bevinding van de batterij
-Opeens heeft de batterij 1000 kw op een dag geladen. De totale batterij gegevens kloppen niet meer.
-Daarom de waardes van register 33000 en 33002 gereset zodat e.a. weer klopt.
 

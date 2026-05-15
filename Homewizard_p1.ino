@@ -1,4 +1,5 @@
-const char* homewizardP1Url = "http://HW-p1meter-3CB898/api/v1/data";
+//const char* homewizardP1Url = "http://HW-p1meter-3CB898/api/v1/data";
+const char* homewizardP1Url = "http://192.168.178.189/api/v1/data";
 
 /* if not authenticated run following command from browser*/
 /* http://beeclear/bc_security?set=off */

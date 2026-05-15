@@ -12,7 +12,9 @@ void Initialize_Wifi_And_Server() {
 
 
   Serial.println("Connecting to WiFi..." + String(ssid));
-  WiFi.hostname("marstekcontroller");
+  Serial.print("MachineName: ");
+  Serial.println(ControllerName);
+  WiFi.hostname(ControllerName);
   WiFi.begin(ssid, password);
   String extend = "";
   while (WiFi.status() != WL_CONNECTED) {
@@ -103,11 +105,11 @@ void initTime(String timezone) {
   //setTime(timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec, timeinfo.tm_mday, timeinfo.tm_mon, timeinfo.tm_year);
 }
 
-
 void ConfigureWebServer() {
 
   server.on("/status", HTTP_GET, handleGetStatus);
   server.on("/data", HTTP_POST, handlePostRequest, NULL, handlePostBody);
+  server.on("/mode", HTTP_POST, handlePostAutomaticMode);
 
 
   // Route for root / web page
@@ -210,7 +212,9 @@ void handleGetStatus(AsyncWebServerRequest *request) {
   StaticJsonDocument<200> doc;
   doc["status"] = "OK";
   doc["uptime_ms"] = millis();
-  doc["load"] = GetCurrentBatteyPower();
+  doc["load"] = GetCurrentBatteryPower();
+  doc["batterypercentage"] = GetCurrentBatteryPercentage();
+  doc["mode"] = GetRunMode();
 
   String response;
   serializeJson(doc, response);
@@ -250,15 +254,57 @@ void handlePostBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, s
     return;
   }
 
-  bool result = ExternalControlBattery(requested);
-  if (result) {
-    StaticJsonDocument<200> res;
-    res["requested"] = requested;
-    String response;
-    serializeJson(res, response);
-    request->send(200, "application/json", response);
+  marstek_load scheduleConfiguration = GetCurrentBatteryControlInfo(currentHour());
+  if (scheduleConfiguration.enabled) {
+    request->send(409, "application/json", "{\"error\":\"Cannot enable automatic mode, schedule is already enabled\"}");
     return;
   }
-  // not allowed
-  request->send(409, "application/json", "");
+  if (requested != 0) {
+    ExternalRequestedAutomaticMode = false;
+    ExternalRequestedPower = requested;
+    ExternalManualMode = true;
+  } else {
+    ExternalRequestedAutomaticMode = false;
+    ExternalManualMode = false;
+    allowExternalPower = false;
+  }
+  
+  StaticJsonDocument<200> res;
+  res["requested"] = requested;
+  String response;
+  serializeJson(res, response);
+  request->send(200, "application/json", response);
+}
+
+
+void handlePostAutomaticMode(AsyncWebServerRequest *request) {
+  if (request->hasParam("auto")) {
+    String autoParam = request->getParam("auto")->value();
+    int autoValue = autoParam.toInt();
+
+    if (autoValue == 1) {
+      // Enable automatic mode
+      marstek_load scheduleConfiguration = GetCurrentBatteryControlInfo(currentHour());
+      if (scheduleConfiguration.enabled) {
+        request->send(409, "application/json", "{\"error\":\"Cannot enable automatic mode, schedule is already enabled\"}");
+        return;
+      }
+      ExternalRequestedAutomaticMode = true;
+      allowExternalPower = false;
+      ExternalManualMode = false;
+      Serial.println("Automatic mode enabled");
+      request->send(200, "application/json", "{\"status\":\"success\",\"mode\":\"automatic\"}");
+    } else if (autoValue == 0) {
+      // Disable automatic mode
+      ExternalRequestedAutomaticMode = false;
+      allowExternalPower = false;
+      ExternalManualMode = false;
+      Serial.println("Automatic mode disabled");
+      request->send(200, "application/json", "{\"status\":\"success\",\"mode\":\"manual\"}");
+    } else {
+      request->send(400, "application/json", "{\"error\":\"auto parameter must be 0 or 1\"}");
+    }
+  } else {
+    request->send(400, "application/json", "{\"error\":\"Missing auto parameter\"}");
+  }
 }

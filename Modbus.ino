@@ -283,6 +283,7 @@ String GetBatteryInfoForPage(String registerNummer) {
   {
     result = String(value) + " " + data.unity;
   }
+  runMode=result;
   return result;
 }
 
@@ -400,9 +401,19 @@ int32_t GetMaxBatteryPercentage() {
     return 99;
 }
 
-int GetCurrentBatteyPower() {
-  return lastpower;
+int GetCurrentBatteryPower() {
+  return lastpower*-1;
 }
+
+int GetCurrentBatteryPercentage() {
+  return batteryPercentage;
+}
+
+String GetRunMode()
+{
+    return runMode;
+}
+
 
 String DetermineBatteryMode(int32_t value)
 {

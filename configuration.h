@@ -1,10 +1,10 @@
-
+// needs to be changes when deploying
+const char* ControllerName="marstekcontroller";
 
 // time settings
 #define MY_NTP_SERVER "nl.pool.ntp.org"
 // amsterdam time zone
 #define MY_TIME_ZONE "CET-1CEST,M3.5.0,M10.5.0/3"
-
 
 struct marstek_load {
   bool automatic;

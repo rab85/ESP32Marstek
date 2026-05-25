@@ -1,5 +1,6 @@
 // needs to be changes when deploying
-const char* ControllerName="marstekcontroller";
+const char* ControllerName = "marstekcontroller";
+
 
 // time settings
 #define MY_NTP_SERVER "nl.pool.ntp.org"
@@ -24,9 +25,9 @@ struct RTInfo_t  // Structure of Real-time input data
 };
 
 
-const int minBatteryPercentage = 12;
-const int minPowerexport= -75;
-const int minPowerload = 50;
+const int minBatteryPercentage = 11;
+const int minPowerexport = -100;
+const int minPowerload = 100;
 
 const int MaxReturnPower = -800;
 const int MaxLoadPower = 1000;

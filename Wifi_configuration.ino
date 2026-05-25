@@ -74,19 +74,7 @@ void setTimezone(String timezone) {
   Serial.printf("  Setting Timezone to %s\n", timezone.c_str());
   setenv("TZ", timezone.c_str(), 1);  //  Now adjust the TZ.  Clock settings are adjusted to show the new local time
   tzset();
-  // FillLocalTime();
-
-  // Serial.print(timeinfo.tm_hour);
-  // Serial.print(":");
-  // Serial.print(timeinfo.tm_min);
-  // Serial.print(":");
-  // Serial.print(timeinfo.tm_sec);
-  // Serial.print("   ");
-  // Serial.print(timeinfo.tm_mday);
-  // Serial.print("-");
-  // Serial.print(timeinfo.tm_mon);
-  // Serial.print("-");
-  // Serial.println(timeinfo.tm_year);
+ 
 }
 
 void initTime(String timezone) {
@@ -263,10 +251,12 @@ void handlePostBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, s
     ExternalRequestedAutomaticMode = false;
     ExternalRequestedPower = requested;
     ExternalManualMode = true;
+    lastBatteryChange=0;
   } else {
     ExternalRequestedAutomaticMode = false;
     ExternalManualMode = false;
     allowExternalPower = false;
+    lastBatteryChange=0;
   }
   
   StaticJsonDocument<200> res;
@@ -292,6 +282,7 @@ void handlePostAutomaticMode(AsyncWebServerRequest *request) {
       ExternalRequestedAutomaticMode = true;
       allowExternalPower = false;
       ExternalManualMode = false;
+      lastBatteryChange=0;
       Serial.println("Automatic mode enabled");
       request->send(200, "application/json", "{\"status\":\"success\",\"mode\":\"automatic\"}");
     } else if (autoValue == 0) {
@@ -299,6 +290,7 @@ void handlePostAutomaticMode(AsyncWebServerRequest *request) {
       ExternalRequestedAutomaticMode = false;
       allowExternalPower = false;
       ExternalManualMode = false;
+      lastBatteryChange=0;
       Serial.println("Automatic mode disabled");
       request->send(200, "application/json", "{\"status\":\"success\",\"mode\":\"manual\"}");
     } else {

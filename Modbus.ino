@@ -273,17 +273,15 @@ String GetBatteryInfoForPage(String registerNummer) {
 
   // get all data;
   RTInfo_t data = GetRegisterData(registerid, false);
-  
+
   int32_t value = data.value;
-  if(registerid==35100)
-  {
-    result=DetermineBatteryMode(value);
-  }
-  else
-  {
+  if (registerid == 35100) {
+    result = DetermineBatteryMode(value);
+    runMode = result;
+  } else {
     result = String(value) + " " + data.unity;
   }
-  runMode=result;
+  
   return result;
 }
 
@@ -323,7 +321,7 @@ void SetBatteryOutput(int32_t power, int32_t batteryPercentage) {
     }
   } else {
     ConfigureNoPower();
-    power=0;
+    power = 0;
   }
 
   if (power != lastpower) {
@@ -393,32 +391,30 @@ void ConfigureNoPower() {
 }
 
 int32_t GetMaxBatteryPercentage() {
-  int daynr = weekDay();
-  // monday and friday 100% other days just 98%
-  if (daynr == 1 || daynr == 5)
-    return 100;
-  else
-    return 99;
+  return 100;
+  // int daynr = weekDay();
+  // // monday and friday 100% other days just 98%
+  // if (daynr == 1 || daynr == 5)
+  //   return 100;
+  // else
+  //   return 100;
 }
 
 int GetCurrentBatteryPower() {
-  return lastpower*-1;
+  return lastpower * -1;
 }
 
 int GetCurrentBatteryPercentage() {
   return batteryPercentage;
 }
 
-String GetRunMode()
-{
-    return runMode;
+String GetRunMode() {
+  return runMode;
 }
 
 
-String DetermineBatteryMode(int32_t value)
-{
-  switch(value)
-  {
+String DetermineBatteryMode(int32_t value) {
+  switch (value) {
     case 1:
       return "Stand-by";
     case 2:

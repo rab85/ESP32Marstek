@@ -10,7 +10,7 @@ SemaphoreHandle_t xMutex;
 
 RTInfo_t rtdata[] =  // Real-time data from Venus
   {
-    // reg, type, desc, factor, waarde
+    // reg, type, desc, factor, waarde, monitor
     { 32104, "u16", "SOC", 1, 25, "procent", 1 },                // SOC    - State of charge in procenten, bijv 14
     { 32202, "s32", "AC power bat", 1, 0, "Wat", 1 },            // ACPW   - AC power into the grid, bijv -198
     { 35100, "u16", "Inverter-state", 1, 0, "", 0 },             // INVST  - Inverters state 0..5
@@ -21,7 +21,9 @@ RTInfo_t rtdata[] =  // Real-time data from Venus
     { 44003, "u16", "max discharge power", 1, 100, "Wat", 0 },   // MAXDIS - Max discharge power 200..5000W
     { 33000, "u32", "Total charging", 100, 0, "Kwh", 0 },        // TCHARGE - Total charching energy
     { 33002, "u32", "Total discharging", 100, 0, "kwh", 0 },     // TCHARGE - Total charching energy
-    { 32102, "s32", "Laadt met", 1, 0, "Wat", 1 }                // CURBC  - Huidig vermogen opladen (negatief is ontladen)
+    { 32102, "s32", "Laadt met", 1, 0, "Wat", 1 },                // CURBC  - Huidig vermogen opladen (negatief is ontladen)
+    { 35000, "s16", "temperatuur", 10, 0, "Graden", 1 }            // Internal temperature
+    
 
 
   };
@@ -156,23 +158,6 @@ bool get_modbus_data_regs(bool monitorOnly) {
       if (dt == "u32") {
         value32 = value << 16 | node.getResponseBuffer(1);
       }
-
-      // if(dt == "l16")
-      // {
-      //   value32 = value;  // Converteer u16 naar float
-      //   switch(value32)
-      //   {
-      //     case 1:
-      //     rtdata[i].info="standby";
-      //     break;
-      //     case 2:
-      //     rtdata[i].info="laden";
-      //     break;
-      //     case 3:
-      //     rtdata[i].info="ontladen";
-      //     break;
-      //   }
-      // }
 
       delay(20);  // Laat anderen toe
 
@@ -409,9 +394,13 @@ int GetCurrentBatteryPercentage() {
 }
 
 String GetRunMode() {
-  return runMode;
+  return GetBatteryInfoForPage("35100");
 }
 
+int32_t GetBatteryTemperature() {
+   RTInfo_t data = GetRegisterData(35000, false);
+  return data.value;
+}
 
 String DetermineBatteryMode(int32_t value) {
   switch (value) {

@@ -203,6 +203,7 @@ void handleGetStatus(AsyncWebServerRequest *request) {
   doc["load"] = GetCurrentBatteryPower();
   doc["batterypercentage"] = GetCurrentBatteryPercentage();
   doc["mode"] = GetRunMode();
+  doc["temperature"] = GetBatteryTemperature();
 
   String response;
   serializeJson(doc, response);
@@ -251,11 +252,13 @@ void handlePostBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, s
     ExternalRequestedAutomaticMode = false;
     ExternalRequestedPower = requested;
     ExternalManualMode = true;
+    UseHalfMode = false;
     lastBatteryChange=0;
   } else {
     ExternalRequestedAutomaticMode = false;
     ExternalManualMode = false;
     allowExternalPower = false;
+    UseHalfMode = false;
     lastBatteryChange=0;
   }
   
@@ -282,14 +285,31 @@ void handlePostAutomaticMode(AsyncWebServerRequest *request) {
       ExternalRequestedAutomaticMode = true;
       allowExternalPower = false;
       ExternalManualMode = false;
+      UseHalfMode = false;
       lastBatteryChange=0;
       Serial.println("Automatic mode enabled");
       request->send(200, "application/json", "{\"status\":\"success\",\"mode\":\"automatic\"}");
+    }
+    else if (autoValue == 2) {
+      // Enable automatic mode with external power
+      marstek_load scheduleConfiguration = GetCurrentBatteryControlInfo(currentHour());
+      if (scheduleConfiguration.enabled) {
+        request->send(409, "application/json", "{\"error\":\"Cannot enable automatic mode, schedule is already enabled\"}");
+        return;
+      }
+      ExternalRequestedAutomaticMode = true;
+      allowExternalPower = true;
+      ExternalManualMode = false;
+      UseHalfMode=true;
+      lastBatteryChange=0;
+      Serial.println("Automatic mode enabled with external power");
+      request->send(200, "application/json", "{\"status\":\"success\",\"mode\":\"automatic_with_external_power\"}");
     } else if (autoValue == 0) {
       // Disable automatic mode
       ExternalRequestedAutomaticMode = false;
       allowExternalPower = false;
       ExternalManualMode = false;
+      UseHalfMode=false;
       lastBatteryChange=0;
       Serial.println("Automatic mode disabled");
       request->send(200, "application/json", "{\"status\":\"success\",\"mode\":\"manual\"}");

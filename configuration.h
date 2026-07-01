@@ -1,5 +1,5 @@
 // needs to be changes when deploying
-const char* ControllerName = "marstekcontroller";
+const char* ControllerName = "marstekcontroller2";
 
 
 // time settings
